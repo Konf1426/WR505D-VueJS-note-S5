@@ -17,25 +17,10 @@ const newArticle = ref({
 const searchQuery = ref("");
 const authorFilter = ref("");
 const dateFilter = ref("");
+const user = ref(null);
+const userProfile = ref(null);
+const userEmail = computed(() => userProfile.value?.email || null);
 
-// const decodedToken = jwtDecode(this.token); // 'this' context is incorrect here
-// console.log("📢 UI:", decodedToken);
-
-const user = computed(() => {
-  if (authStore.token) {
-    try {
-      return jwtDecode(authStore.token);
-    } catch (error) {
-      console.error("Error decoding token:", error);
-      return null;
-    }
-  }
-  return null;
-});
-
-console.log("user", user.value.username);
-
-// 🔥 Récupérer les articles avec filtres
 const fetchArticles = async () => {
   try {
     const params = {};
@@ -50,7 +35,25 @@ const fetchArticles = async () => {
   }
 };
 
-// ✍️ Ajouter un article (🔒 Seulement si connecté)
+watch(() => authStore.token, async (newToken) => {
+  if (newToken) {
+    try {
+      const decoded = jwtDecode(newToken);
+      user.value = decoded;
+      const { data } = await apiClient.get("/users", {
+        params: { email: decoded.username },
+        headers: { Authorization: `Bearer ${authStore.token}` }
+      });
+      userProfile.value = data.member?.[0] || null;
+      console.log("✅ Profil utilisateur :", userProfile.value);
+    } catch (error) {
+      console.error("❌ Erreur lors du décodage ou de la récupération utilisateur :", error);
+      user.value = null;
+      userProfile.value = null;
+    }
+  }
+}, { immediate: true });
+
 const postArticle = async () => {
   if (!authStore.isAuthenticated) {
     alert("⚠️ Vous devez être connecté pour publier un article !");
@@ -62,9 +65,9 @@ const postArticle = async () => {
     return;
   }
 
-  const user = user.value.username; // 🔥 Récupère l'utilisateur connecté depuis le store
-  if (!user || !user.id) {
-    console.error("❌ Utilisateur non récupéré");
+  const userData = userProfile.value;
+  if (!userData?.id) {
+    console.error("❌ Impossible de récupérer l'ID utilisateur !");
     return;
   }
 
@@ -72,16 +75,15 @@ const postArticle = async () => {
     const payload = {
       ...newArticle.value,
       tags: newArticle.value.tags.split(",").map(tag => tag.trim()),
-      author: `/api/users/${user.id}` // ✅ Ajout de l'auteur
+      author: `/api/users/${userData.id}`
     };
 
-    console.log("📤 Envoi de l'article :", payload);
+    console.log("📦 Payload envoyé à l'API :", payload);
 
     await apiClient.post("/contents", payload, {
       headers: { Authorization: `Bearer ${authStore.token}` }
     });
 
-    console.log("✅ Article ajouté !");
     newArticle.value = { title: "", content: "", metaTitle: "", metaDescription: "", slug: "", tags: "" };
     fetchArticles();
   } catch (err) {
@@ -89,8 +91,6 @@ const postArticle = async () => {
   }
 };
 
-
-// Initialisation
 onMounted(() => {
   fetchArticles();
 });
@@ -100,35 +100,35 @@ watch([searchQuery, authorFilter, dateFilter], fetchArticles);
 <template>
   <h2>📖 Articles</h2>
 
-  <!-- Champs de filtre -->
   <div class="filters">
     <input v-model="searchQuery" placeholder="🔍 Rechercher un article..." />
     <input v-model="authorFilter" placeholder="🖊️ Filtrer par auteur..." />
     <input v-model="dateFilter" type="date" placeholder="📅 Filtrer par date" />
   </div>
 
-  <!-- Ajout d'un article (🔒 Seulement si connecté) -->
   <div v-if="authStore.isAuthenticated" class="add-article">
     <h3>📝 Ajouter un article</h3>
-    <input v-model="newArticle.title" placeholder="Titre de l'article" />
-    <textarea v-model="newArticle.content" placeholder="Contenu de l'article"></textarea>
-    <input v-model="newArticle.metaTitle" placeholder="SEO Title" />
-    <input v-model="newArticle.metaDescription" placeholder="Description" />
-    <input v-model="newArticle.slug" placeholder="Slug" />
-    <input v-model="newArticle.tags" placeholder="Tags (séparés par des virgules)" />
+    <input v-model="newArticle.title" placeholder="Titre de l'article" @input="() => console.log('✏️ title → content.title')" />
+    <textarea v-model="newArticle.content" placeholder="Contenu de l'article" @input="() => console.log('✏️ content → content.content')"></textarea>
+    <input v-model="newArticle.metaTitle" placeholder="SEO Title" @input="() => console.log('✏️ metaTitle → content.meta_title')" />
+    <input v-model="newArticle.metaDescription" placeholder="SEO Description" @input="() => console.log('✏️ metaDescription → content.meta_description')" />
+    <input v-model="newArticle.slug" placeholder="Slug" @input="() => console.log('✏️ slug → content.slug (Gedmo)')" />
+    <input v-model="newArticle.tags" placeholder="Tags (séparés par des virgules)" @input="() => console.log('✏️ tags → content.tags')" />
     <button @click="postArticle">Publier</button>
   </div>
 
   <div v-if="articles.length === 0">❌ Aucun article trouvé.</div>
   <div v-for="article in articles" :key="article.slug" class="article-card">
-    <h1>{{ article.title }}</h1>
+    <h1>Titre de l'article : {{ article.title }}</h1>
     <p><strong>SEO Title:</strong> {{ article.metaTitle }}</p>
-    <p><strong>Description:</strong> {{ article.metaDescription }}</p>
+    <p><strong>SEO Description:</strong> {{ article.metaDescription }}</p>
     <p><strong>Slug:</strong> {{ article.slug }}</p>
-    <p v-if="article.author"><strong>Auteur:</strong> {{ article.author.firstname }} {{ article.author.lastname }}</p>
+    <p><strong>Auteur:</strong> {{ article.author?.email || "Inconnu" }}</p>
+    <p><strong>Tags:</strong> {{ article.tags }}</p>
     <router-link :to="`/articles/${article.slug}`">
       <button>Voir +</button>
     </router-link>
+    <pre>{{ article }}</pre>
   </div>
 </template>
 

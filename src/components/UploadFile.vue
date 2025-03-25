@@ -53,13 +53,13 @@
         formData.append("file", this.selectedFile);
   
         try {
-          const response = await axios.post("https://ton-api-cms.com/upload", formData, {
+          await this.$axios.post("/upload", formData, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
             onUploadProgress: (progressEvent) => {
               this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            },
+          },
           });
   
           this.uploadMessage = "Fichier envoyé avec succès !";
@@ -71,7 +71,7 @@
       },
       async fetchFiles() {
         try {
-          const response = await axios.get("https://ton-api-cms.com/files");
+          const response = await this.$axios.get("/files");
           this.files = response.data;
         } catch (error) {
           console.error("Erreur de récupération des fichiers :", error);
