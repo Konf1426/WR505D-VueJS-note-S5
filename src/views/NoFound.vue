@@ -1,6 +1,7 @@
 <template>
   <div class="not-found">
-    <h1>404 - Page non trouvée</h1>
+    <span class="code">404</span>
+    <h1>Page non trouvée</h1>
     <p>La page que vous recherchez n'existe pas.</p>
     <p>C'est fou comment internet c'est grand !</p>
     <router-link to="/">Retour à l'accueil</router-link>
@@ -21,11 +22,18 @@ export default {
   justify-content: center;
   height: 100vh;
   font-family: sans-serif;
+  text-align: center;
+}
+
+.code {
+  font-size: 5em;
+  font-weight: bold;
+  color: #999;
 }
 
 h1 {
-  font-size: 3em;
-  margin-bottom: 20px;
+  font-size: 2em;
+  margin: 10px 0;
 }
 
 p {

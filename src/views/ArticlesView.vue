@@ -78,7 +78,7 @@ const uploadImage = async () => {
     });
 
     console.log('✅ Upload réussi :', response.data);
-    return response.data['@id']; // renvoie l'IRI directement
+    return response.data['@id'];
   } catch (error) {
     console.error('❌ Erreur upload image :', error.response?.data || error);
     throw error;
@@ -111,7 +111,7 @@ const postArticle = async () => {
     const payload = {
       ...newArticle.value,
       tags: newArticle.value.tags.split(",").map(tag => tag.trim()).filter(Boolean),
-      author: `/api/users/${userData.id}`
+      author: userData['@id']
     };
 
     console.log("📦 Payload envoyé à l'API :", payload);
@@ -137,7 +137,6 @@ onMounted(() => {
 watch([searchQuery, authorFilter, dateFilter], fetchArticles);
 </script>
 
-
 <template>
   <h2>📖 Articles</h2>
 
@@ -153,7 +152,7 @@ watch([searchQuery, authorFilter, dateFilter], fetchArticles);
     <textarea v-model="newArticle.content" placeholder="Contenu de l'article"></textarea>
     <input v-model="newArticle.metaTitle" placeholder="SEO Title" />
     <input v-model="newArticle.metaDescription" placeholder="SEO Description" />
-    <input v-model="newArticle.slug" placeholder="Slug" />
+    <!-- <input v-model="newArticle.slug" placeholder="Slug" /> -->
     <input v-model="newArticle.tags" placeholder="Tags (séparés par des virgules)" />
     <input type="file" @change="handleFileChange" />
     <button @click="postArticle">Publier</button>
@@ -162,11 +161,9 @@ watch([searchQuery, authorFilter, dateFilter], fetchArticles);
   <div v-if="articles.length === 0">❌ Aucun article trouvé.</div>
   <div v-for="article in articles" :key="article.slug" class="article-card">
     <h1>{{ article.title }}</h1>
-    <p><strong>Cover :</strong>
-      <!-- {{ article.cover }} -->
-        <!-- {{ article.cover[0].path }} -->
+    <p>
       <img
-        :src="'http://localhost:8000'+article.cover.path"
+        :src="'http://localhost:8000'+article.cover?.path"
         alt="cover"
         width="150"
         v-if="article.cover"
@@ -175,34 +172,106 @@ watch([searchQuery, authorFilter, dateFilter], fetchArticles);
     <p><strong>SEO Title:</strong> {{ article.metaTitle }}</p>
     <p><strong>SEO Description:</strong> {{ article.metaDescription }}</p>
     <p><strong>Slug:</strong> {{ article.slug }}</p>
-    <p><strong>Auteur:</strong> {{ article.author?.email || "Inconnu" }}</p>
-    <p><strong>Tags:</strong> {{ article.tags }}</p>
+    <p><strong>Auteur:</strong> {{ article.author?.email || "Inconnu" }}, {{ article.author?.firstname || "Pas de prénom" }}</p>
+    <p><strong>Tags:</strong> {{ article.tags.join(', ') }}</p>
     <router-link :to="`/articles/${article.slug}`">
       <button>Voir +</button>
     </router-link>
-    <!-- <pre>{{ article }}</pre> -->
   </div>
 </template>
 
 <style scoped>
 .article-card {
-  border: 1px solid #ccc;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-}
-
-.filters, .add-article {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 15px;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
 }
 
-.add-article input, .add-article textarea {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+.article-card:hover {
+  transform: translateY(-3px);
 }
+
+.article-card h1 {
+  font-size: 1.5rem;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.article-card p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.article-card img {
+  border-radius: 10px;
+  margin-top: 5px;
+}
+
+.filters,
+.add-article {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.filters input,
+.add-article input,
+.add-article textarea {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #dcdcdc;
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.add-article textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.add-article h3 {
+  grid-column: 1 / -1;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+  color: #2c3e50;
+}
+
+.add-article button {
+  padding: 12px;
+  background-color: #42b883;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  grid-column: 1 / -1;
+}
+
+.add-article button:hover {
+  background-color: #42b883;
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #16cd5c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #2f8860;
+}
+
 </style>

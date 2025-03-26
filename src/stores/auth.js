@@ -40,6 +40,37 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async register(data) {
+      console.log("🔧 Appel à register avec", data);
+      try {
+        const response = await fetch('http://localhost:8000/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/ld+json',
+            Accept: 'application/ld+json',
+          },
+          body: JSON.stringify({
+            email: data.email,
+            password: data.password,
+            firstname: data.firstname,
+            lastname: data.lastname,
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          console.error('🧨 Erreur API register :', err);
+          throw new Error('Inscription échouée');
+        }
+
+        console.log("✅ Utilisateur créé avec succès !");
+        return await response.json();
+      } catch (e) {
+        console.error("❌ Erreur dans register :", e);
+        throw e;
+      }
+    },
+
     async fetchUser() {
       try {
         if (!this.token) {

@@ -39,7 +39,12 @@
 
     <!-- Page Content -->
     <div class="container mx-auto p-6">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <component :is="Component" />
+        <template v-if="!Component">
+          <NotFound />
+        </template>
+      </router-view>
     </div>
   </div>
 </template>
@@ -55,6 +60,7 @@ import {
   ChartBarIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/vue/24/solid';
+import NotFound from './views/NoFound.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();

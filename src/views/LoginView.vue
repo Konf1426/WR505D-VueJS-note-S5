@@ -1,6 +1,6 @@
 <template>
     <div class="auth-container">
-      <h2>Connexion</h2>
+      <h1>Connexion</h1>
       <form @submit.prevent="handleLogin">
         <div>
           <label>Email</label>

@@ -10,7 +10,7 @@
       <div v-if="comments.length === 0">Aucun commentaire.</div>
       <div v-for="comment in comments" :key="comment['@id']" class="comment">
         <p>
-          <strong>{{ comment.author?.firstname || "Anonyme" }} {{ comment.author?.lastname || "" }}</strong> :
+          <strong>{{ comment.author?.email || "Anonyme" }} {{ comment.author?.lastname || "" }}</strong> :
           {{ comment.message }}
         </p>
       </div>
